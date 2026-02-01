@@ -1,0 +1,14 @@
+.dbtenv/
+venv/
+env/
+
+*.ddb
+*.duckdb
+testdb
+
+logs/
+target/
+dbt_packages/
+
+.DS_Store
+Thumbs.db

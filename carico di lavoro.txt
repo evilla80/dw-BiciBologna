@@ -1,0 +1,12 @@
+DOMANDE A CUI IL DW DEVE RISPONDERE
+
+1. Quali sono i 3 quartieri in cui c'è più traffico di bici?
+2. Quante bici passano i media quando la temperatura è fredda e/o piove?
+3. Passano più biciclette che vanno verso il centro o verso la periferia?
+4. Quali sono le ore di punta in cui passano più bici?
+5. Quante bici passano in media nel weekend? 
+6. Come è cambiato il flussi di bici negli ultimi 5 anni?
+7. Come è cambiato il flussi di bici negli ultimi 5 anni nelle giornate piovose?
+8. In che quartiere passano più bici in relazione alla grandezza del quartiere? 
+9. Come cambia il flusso di bici nel quartiere universitario (santo stefano) nel weekend? 
+10. 

@@ -1,8 +1,0 @@
-dwh:
-  outputs:
-    dev:
-      type: duckdb
-      path: dwh.ddb
-      threads: 1
-
-  target: dev

@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: staging
+    database: bike_sharing
+    schema: main
+    tables:
+      - name: raw_colonnine
+      - name: raw_meteo
+      - name: raw_quartieri

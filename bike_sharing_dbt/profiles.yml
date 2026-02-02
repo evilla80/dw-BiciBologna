@@ -1,0 +1,10 @@
+bike_sharing_dbt:
+  outputs:
+    dev:
+      type: duckdb
+      path: '../bike_sharing.ddb'
+      extensions:
+        - spatial
+      threads: 1
+
+  target: dev

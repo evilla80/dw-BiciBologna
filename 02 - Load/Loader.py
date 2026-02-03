@@ -18,6 +18,8 @@ for f in files_to_check:
         exit()
 
 con = duckdb.connect(db_path)
+# Installazione e caricamento estensione spaziale
+con.execute("INSTALL spatial; LOAD spatial;")
 
 csv_bici = os.path.join(data_dir, 'colonnine_2020_2025.csv')
 con.execute(f"CREATE OR REPLACE TABLE raw_colonnine AS SELECT * FROM read_csv_auto('{csv_bici}', delim='\\t')")
@@ -29,7 +31,7 @@ print("Caricamento raw_quartieri...")
 json_quartieri = os.path.join(data_dir, 'quartieri_api.json')
 con.execute(f"CREATE OR REPLACE TABLE raw_quartieri AS SELECT * FROM read_json_auto('{json_quartieri}')")
 
-count_bici = con.execute("SELECT COUNT(*) FROM raw_bici").fetchone()[0]
+count_bici = con.execute("SELECT COUNT(*) FROM raw_colonnine").fetchone()[0]
 count_meteo = con.execute("SELECT COUNT(*) FROM raw_meteo").fetchone()[0]
 
 print(f"\n--- SUCCESSO! ---")

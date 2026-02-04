@@ -1,0 +1,19 @@
+/*
+    Estrazione dati geografici quartieri
+*/
+
+{{ config(materialized='ephemeral') }}
+
+SELECT
+    quartiere AS nome,
+    -- FONDAMENTALE: Esporre la geometria per il join nel Data Mart
+    ST_GeomFromGeoJSON(json_extract(to_json(geo_shape), '$.geometry')) AS geom_perimetro,
+
+    CAST(json_extract(to_json(geo_point_2d), '$.lat') AS DOUBLE) AS latitudine_centro,
+    CAST(json_extract(to_json(geo_point_2d), '$.lon') AS DOUBLE) AS longitudine_centro,
+    CAST(ST_Area(ST_GeomFromGeoJSON(json_extract(to_json(geo_shape), '$.geometry'))) AS DOUBLE) AS superficie,
+    CAST(ST_Perimeter(ST_GeomFromGeoJSON(json_extract(to_json(geo_shape), '$.geometry'))) AS DOUBLE) AS perimetro,
+
+    current_timestamp AS insert_time,
+    current_timestamp AS update_time
+FROM {{ source('staging', 'raw_quartieri') }}

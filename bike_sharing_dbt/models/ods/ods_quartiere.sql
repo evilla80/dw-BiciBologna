@@ -1,16 +1,22 @@
-{{ config(materialized='incremental',unique_key='nome' ) }}
+/*
+    Materializzazione anagrafica Quartieri
+*/
 
-SELECT DISTINCT
-    nome_quartiere AS nome,
-    superficie,
-    perimetro,
+{{ config(materialized='incremental', unique_key='nome', alias='quartiere') }}
+
+SELECT
+    nome,
+    -- Aggiungiamo questa riga fondamentale!
+    geom_perimetro,
+
     latitudine_centro,
     longitudine_centro,
-    current_timestamp AS insert_time,
-    current_timestamp AS update_time
-FROM {{ ref('stg_rilevazione_geo') }}
-WHERE nome_quartiere IS NOT NULL
+    superficie,
+    perimetro,
+    insert_time,
+    update_time
+FROM {{ ref('ods_quartiere_transform') }}
 
 {% if is_incremental() %}
-  AND nome_quartiere NOT IN (SELECT nome FROM {{ this }})
+  WHERE update_time > (SELECT IFNULL(MAX(update_time), '0001-01-01 00:00:00') FROM {{ this }})
 {% endif %}

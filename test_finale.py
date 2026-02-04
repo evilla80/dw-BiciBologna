@@ -151,4 +151,92 @@ ORDER BY passaggi_per_kmq DESC;
 """
 esegui_query("9. Qual è il quartiere più 'intenso' in rapporto alla sua grandezza?", sql_densita)
 
+
+print("--- 1. VERIFICA JOIN SPAZIALE (Colonnine -> Quartieri) ---")
+# Se qui vedi dei nomi di quartieri, la magia spaziale ha funzionato!
+query_geo = """
+SELECT 
+    c.nome_colonnina, 
+    q.nome_quartiere,
+    c.latitudine,
+    c.longitudine
+FROM dm_colonnina c
+LEFT JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.idQuartiere
+LIMIT 5;
+"""
+print(con.execute(query_geo).df())
+
+print("\n--- 2. VERIFICA FATTI E METEO (Rilevazioni -> Meteo) ---")
+# Vediamo se le bici sono collegate al tempo che faceva
+query_fact = """
+SELECT 
+    d.data,
+    o.fascia_oraria,
+    m.descrizione as meteo,
+    m.temperatura,
+    sum(r.totale) as bici_totali
+FROM dm_rilevazione r
+JOIN dm_data d ON r.data_idData = d.idData
+JOIN dm_ora o ON r.ora_idOra = o.idOra
+LEFT JOIN dm_meteo m ON r.meteo_idMeteo = m.idMeteo
+GROUP BY 1, 2, 3, 4
+ORDER BY 1 DESC
+LIMIT 5;
+"""
+print(con.execute(query_fact).df())
+
+query_fact = """
+SELECT 
+    d.anno,
+    
+    -- Calcolo Media per Fascia Oraria (Pivot)
+    -- Usiamo ROUND(..., 1) per avere un solo decimale
+    ROUND(AVG(CASE WHEN o.fascia_oraria = 'Mattina' THEN r.totale END), 1) as avg_mattina,
+    ROUND(AVG(CASE WHEN o.fascia_oraria = 'Pomeriggio' THEN r.totale END), 1) as avg_pomeriggio,
+    ROUND(AVG(CASE WHEN o.fascia_oraria = 'Sera' THEN r.totale END), 1) as avg_sera,
+    ROUND(AVG(CASE WHEN o.fascia_oraria = 'Notte' THEN r.totale END), 1) as avg_notte,
+    
+    -- Media generale e Volume Totale
+    ROUND(AVG(r.totale), 1) as media_oraria_complessiva,
+    SUM(r.totale) as passaggi_totali_assoluti
+
+FROM dm_rilevazione r
+JOIN dm_data d ON r.data_idData = d.idData
+JOIN dm_ora o ON r.ora_idOra = o.idOra
+GROUP BY d.anno
+ORDER BY d.anno DESC;
+"""
+print(con.execute(query_fact).df())
+
+print("--- ANALISI CORRETTA ANOMALIA 2025 ---")
+
+query_debug = """
+SELECT 
+    d.anno,
+    -- 1. Numero di colonnine diverse che hanno mandato dati
+    COUNT(DISTINCT r.colonnina_idColonnina) as num_colonnine_attive,
+
+    -- 2. Totale righe nella tabella fatti
+    COUNT(*) as righe_totali,
+
+    -- 3. INDICATORE DI GRANULARITÀ (Il dato chiave)
+    -- Se i dati sono ORARI, ogni sensore dovrebbe generare circa 8.760 righe l'anno (24h * 365gg).
+    -- Se i dati sono QUARTARI (15 min), ogni sensore ne genera circa 35.040 (4 * 24h * 365gg).
+    CAST(COUNT(*) AS INTEGER) / CAST(COUNT(DISTINCT r.colonnina_idColonnina) AS INTEGER) as righe_medie_per_sensore,
+
+    SUM(r.totale) as passaggi_totali,
+    ROUND(AVG(r.totale), 1) as media_passaggi_per_riga
+FROM dm_rilevazione r
+JOIN dm_data d ON r.data_idData = d.idData
+GROUP BY d.anno
+ORDER BY d.anno DESC;
+"""
+
+df_debug = con.execute(query_debug).df()
+print(df_debug.to_string())
+
+
+con = duckdb.connect('bike_sharing.ddb')
+con.sql("SHOW TABLES").show()
+
 con.close()

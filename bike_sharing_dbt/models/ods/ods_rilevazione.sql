@@ -1,20 +1,22 @@
-{{config(materialized='incremental',unique_key=['timestamp_completo', 'nome_colonnina']) }}
+/*
+    Tabella transazionale delle rilevazioni
+*/
+
+{{ config(materialized='incremental', unique_key=['timestamp_completo', 'nome_colonnina'], alias='rilevazione') }}
 
 SELECT
     timestamp_completo,
-    -- Tronchiamo la data per averla pulita (YYYY-MM-DD)
     CAST(timestamp_completo AS DATE) AS data,
     EXTRACT(HOUR FROM timestamp_completo) AS ora,
-
     nome_colonnina,
+    -- Rimosso: nome_quartiere_calcolato (ora gestito nel Data Mart Colonnina)
     direzioneCentro,
     direzionePeriferia,
     totale,
-
-    extraction_time AS insert_time,
-    extraction_time AS update_time
-FROM {{ ref('stg_rilevazione_geo') }}
+    insert_time,
+    update_time
+FROM {{ ref('ods_rilevazione_transform') }}
 
 {% if is_incremental() %}
-  WHERE timestamp_completo > (SELECT MAX(timestamp_completo) FROM {{ this }})
+  WHERE update_time > (SELECT IFNULL(MAX(update_time), '0001-01-01 00:00:00') FROM {{ this }})
 {% endif %}

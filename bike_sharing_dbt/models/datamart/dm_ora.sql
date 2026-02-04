@@ -9,6 +9,24 @@
 {% endset %}
 {% do run_query(initialize) %}
 
+WITH source_data AS (
+    -- Prepariamo i dati unici dalla ODS (Source)
+    SELECT
+        ora,
+        CASE
+            WHEN ora BETWEEN 0 AND 5 THEN 'Notte'
+            WHEN ora BETWEEN 6 AND 11 THEN 'Mattina'
+            WHEN ora BETWEEN 12 AND 17 THEN 'Pomeriggio'
+            ELSE 'Sera'
+        END as fascia_oraria,
+
+        -- Prendiamo l'ultimo aggiornamento disponibile per quest'ora
+        MAX(update_time) as update_time
+
+    FROM {{ ref('ods_rilevazione') }}
+    GROUP BY 1, 2
+)
+
 SELECT
     {% if is_incremental() %}
         IFNULL(target.idOra, nextval('seq_dm_ora'))
@@ -16,21 +34,17 @@ SELECT
         nextval('seq_dm_ora')
     {% endif %} as idOra,
 
-    source.ora,
+    o.ora,
+    o.fascia_oraria,
 
-    CASE
-        WHEN source.ora BETWEEN 0 AND 5 THEN 'Notte'
-        WHEN source.ora BETWEEN 6 AND 11 THEN 'Mattina'
-        WHEN source.ora BETWEEN 12 AND 17 THEN 'Pomeriggio'
-        ELSE 'Sera'
-    END as fascia_oraria,
 
-    current_timestamp as insert_time,
-    current_timestamp as update_time
-
-FROM (SELECT DISTINCT ora FROM {{ ref('ods_rilevazione') }}) as source
+FROM source_data as o
+    LEFT JOIN {{ this }} as target ON o.ora = target.ora
 
 {% if is_incremental() %}
-    LEFT JOIN {{ this }} as target ON source.ora = target.ora
-    WHERE target.idOra IS NULL
+    WHERE o.update_time > (
+        SELECT COALESCE(MAX(time), '1900-01-01 00:00:00')
+        FROM last_execution_times
+        WHERE target_table = '{{ this.identifier }}'
+    )
 {% endif %}

@@ -30,7 +30,18 @@ clean-targets:         # directories to be removed by `dbt clean`
 # directory as views. These settings can be overridden in the individual model
 # files using the `{{ config(...) }}` macro.
 models:
-  bike_sharing_dwh:
-    # Config indicated by + and applies to all files under models/example/
-    example:
-      +materialized: view
+  bike_sharing_dbt:
+    # Configurazione globale
+    +materialized: view
+
+    ods:
+      +schema: ods
+
+    datamart:
+      +schema: datamart
+      # PRE-HOOK: Crea la tabella di controllo se non esiste (una volta sola)
+      +pre-hook:
+        - "CREATE TABLE IF NOT EXISTS last_execution_times (target_table VARCHAR, time TIMESTAMP, PRIMARY KEY(target_table))"
+      # POST-HOOK: Dopo che il modello ha finito, salva l'orario di esecuzione
+      +post-hook:
+        - "INSERT OR REPLACE INTO last_execution_times (target_table, time) VALUES ('{{ this.identifier }}', '{{ run_started_at }}')"

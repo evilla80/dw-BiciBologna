@@ -1,14 +1,12 @@
-{{ config(materialized='incremental',unique_key='nome') }}
+/*
+    Materializzazione anagrafica Colonnine
+*/
 
-SELECT DISTINCT
-    nome_colonnina AS nome,
-    latitudine,
-    longitudine,
-    nome_quartiere,
-    current_timestamp AS insert_time,
-    current_timestamp AS update_time
-FROM {{ ref('stg_rilevazione_geo') }}
+{{ config(materialized='incremental', unique_key='nome', alias='colonnina') }}
+
+SELECT *
+FROM {{ ref('ods_colonnina_transform') }}
 
 {% if is_incremental() %}
-  AND nome_colonnina NOT IN (SELECT nome FROM {{ this }})
+  WHERE update_time > (SELECT IFNULL(MAX(update_time), '0001-01-01 00:00:00') FROM {{ this }})
 {% endif %}

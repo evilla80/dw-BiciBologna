@@ -1,8 +1,8 @@
-{{ config(
-    materialized='incremental',
-    unique_key=['idQuartiere'],
-    alias='dm_quartiere'
-) }}
+/*
+    Caricamento incrementale Dimensione Quartiere con generazione chiave surrogata
+*/
+
+{{ config(materialized='incremental', unique_key=['idQuartiere'], alias='dm_quartiere') }}
 
 {% set initialize %}
     CREATE SEQUENCE IF NOT EXISTS seq_dm_quartiere;
@@ -10,29 +10,20 @@
 {% do run_query(initialize) %}
 
 SELECT
-    -- Se è incrementale (tabella esiste), prova a recuperare l'ID vecchio.
-    -- Se è la prima volta (o tabella non trovata), genera nuovo ID.
-    {% if is_incremental() %}
-        IFNULL(target.idQuartiere, nextval('seq_dm_quartiere'))
-    {% else %}
-        nextval('seq_dm_quartiere')
-    {% endif %} as idQuartiere,
+    IFNULL(target.idQuartiere, nextval('seq_dm_quartiere')) as idQuartiere,
+    q.nome as nome_quartiere,
+    q.superficie,
+    q.perimetro,
+    q.latitudine_centro,
+    q.longitudine_centro
 
-    source.nome as nome_quartiere,
-    source.superficie,
-    source.perimetro,
-    source.latitudine_centro,
-    source.longitudine_centro,
+FROM {{ ref('ods_quartiere') }} as q
+    LEFT JOIN {{ this }} as target ON q.nome = target.nome_quartiere
 
-    current_timestamp as insert_time,
-    current_timestamp as update_time
-
-FROM {{ ref('ods_quartiere') }} as source
-
--- JOIN PROTETTA:
--- Viene eseguita SOLO se siamo in modalità incrementale (la tabella esiste già)
 {% if is_incremental() %}
-    LEFT JOIN {{ this }} as target
-    ON source.nome = target.nome_quartiere
-    WHERE source.insert_time > (SELECT MAX(update_time) FROM {{ this }})
+    WHERE q.update_time > (
+        SELECT COALESCE(MAX(time), '1900-01-01 00:00:00')
+        FROM last_execution_times
+        WHERE target_table = '{{ this.identifier }}'
+    )
 {% endif %}

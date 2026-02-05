@@ -236,7 +236,4 @@ df_debug = con.execute(query_debug).df()
 print(df_debug.to_string())
 
 
-con = duckdb.connect('bike_sharing.ddb')
-con.sql("SHOW TABLES").show()
-
 con.close()

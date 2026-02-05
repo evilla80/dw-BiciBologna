@@ -6,9 +6,7 @@
 
 SELECT
     nome,
-    -- Aggiungiamo questa riga fondamentale!
     geom_perimetro,
-
     latitudine_centro,
     longitudine_centro,
     superficie,

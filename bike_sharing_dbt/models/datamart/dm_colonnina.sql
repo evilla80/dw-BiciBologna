@@ -14,13 +14,12 @@ SELECT
     c.nome_colonnina,
     c.latitudine,
     c.longitudine,
-    c.quartiere_idQuartiere -- FK popolata dal lookup
+    c.quartiere_idQuartiere
 
 FROM {{ ref('dm_colonnina_fk_lookup') }} as c
     LEFT JOIN {{ this }} as target ON c.nome_colonnina = target.nome_colonnina
 
 {% if is_incremental() %}
-    -- Controlla la data salvata nella tabella last_execution_times per QUESTO modello
     WHERE c.update_time > (
         SELECT COALESCE(MAX(time), '1900-01-01 00:00:00')
         FROM last_execution_times

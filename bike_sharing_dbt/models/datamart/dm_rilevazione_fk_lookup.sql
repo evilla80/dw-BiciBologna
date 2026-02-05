@@ -17,7 +17,6 @@ SELECT
     r.direzioneCentro,
     r.direzionePeriferia,
     r.totale,
-    r.update_time
 
 FROM {{ ref('ods_rilevazione') }} r
     INNER JOIN {{ ref('dm_data') }} d ON r.data = d.data

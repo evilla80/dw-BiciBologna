@@ -20,7 +20,7 @@ SELECT
 FROM {{ ref('dm_rilevazione_fk_lookup') }} as r
 
 {% if is_incremental() %}
-    WHERE r.update_time > (
+    WHERE r.timestamp_completo > (
         SELECT COALESCE(MAX(time), '1900-01-01 00:00:00')
         FROM last_execution_times
         WHERE target_table = '{{ this.identifier }}'

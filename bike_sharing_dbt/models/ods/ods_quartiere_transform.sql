@@ -6,7 +6,6 @@
 
 SELECT
     quartiere AS nome,
-    -- FONDAMENTALE: Esporre la geometria per il join nel Data Mart
     ST_GeomFromGeoJSON(json_extract(to_json(geo_shape), '$.geometry')) AS geom_perimetro,
 
     CAST(json_extract(to_json(geo_point_2d), '$.lat') AS DOUBLE) AS latitudine_centro,

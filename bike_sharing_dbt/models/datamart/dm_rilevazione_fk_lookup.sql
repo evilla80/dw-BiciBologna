@@ -8,10 +8,10 @@
 SELECT
     r.timestamp_completo,
     r.nome_colonnina,
-    d.idData as data_idData,
-    o.idOra as ora_idOra,
-    c.idColonnina as colonnina_idColonnina,
-    m.idMeteo as meteo_idMeteo,
+    d.id_data as data_idData,
+    o.id_ora as ora_idOra,
+    c.id_colonnina as colonnina_idColonnina,
+    m.id_meteo as meteo_idMeteo,
 
     -- Misure
     r.direzioneCentro,

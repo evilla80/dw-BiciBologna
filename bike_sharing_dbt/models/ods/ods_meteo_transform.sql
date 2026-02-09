@@ -7,7 +7,7 @@ SELECT
     time AS timestamp_completo,
     CAST(temperature_2m AS DECIMAL(10,2)) AS temperatura,
     CAST(apparent_temperature AS DECIMAL(10,2)) AS temperatura_percepita,
-    CAST(weather_code AS INTEGER) AS weather_code, -- Lasciamo il codice grezzo!
+    CAST(weather_code AS INTEGER) AS codice_meteo,
 
     current_timestamp AS insert_time,
     current_timestamp AS update_time

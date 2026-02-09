@@ -9,7 +9,6 @@ SELECT
     CAST(timestamp_completo AS DATE) AS data,
     EXTRACT(HOUR FROM timestamp_completo) AS ora,
     nome_colonnina,
-    -- Rimosso: nome_quartiere_calcolato (ora gestito nel Data Mart Colonnina)
     direzioneCentro,
     direzionePeriferia,
     totale,

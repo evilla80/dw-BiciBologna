@@ -1,4 +1,4 @@
-{{ config(materialized='incremental', unique_key=['idMeteo'], alias='dm_meteo') }}
+{{ config(materialized='incremental', unique_key=['id_meteo'], alias='dm_meteo') }}
 
 {% set initialize %}
     CREATE SEQUENCE IF NOT EXISTS seq_dm_meteo;
@@ -6,21 +6,26 @@
 {% do run_query(initialize) %}
 
 SELECT
-    IFNULL(target.idMeteo, nextval('seq_dm_meteo')) as idMeteo,
+    {% if is_incremental() %}
+        -- Usa l'underscore come suggerito dal compilatore
+        IFNULL(target.id_meteo, nextval('seq_dm_meteo'))
+    {% else %}
+        nextval('seq_dm_meteo')
+    {% endif %} as id_meteo,
 
     m.timestamp_completo,
     m.temperatura,
     m.temperatura_percepita,
-    m.weather_code as codice_meteo,
+    m.codice_meteo,
 
     CASE
-        WHEN m.weather_code = 0 THEN 'Cielo Sereno'
-        WHEN m.weather_code BETWEEN 1 AND 3 THEN 'Nuvoloso'
-        WHEN m.weather_code BETWEEN 45 AND 48 THEN 'Nebbia'
-        WHEN m.weather_code BETWEEN 51 AND 67 THEN 'Pioggia'
-        WHEN m.weather_code BETWEEN 71 AND 77 THEN 'Neve'
-        WHEN m.weather_code BETWEEN 80 AND 82 THEN 'Rovesci'
-        WHEN m.weather_code >= 95 THEN 'Temporale'
+        WHEN m.codice_meteo = 0 THEN 'Cielo Sereno'
+        WHEN m.codice_meteo BETWEEN 1 AND 3 THEN 'Nuvoloso'
+        WHEN m.codice_meteo BETWEEN 45 AND 48 THEN 'Nebbia'
+        WHEN m.codice_meteo BETWEEN 51 AND 67 THEN 'Pioggia'
+        WHEN m.codice_meteo BETWEEN 71 AND 77 THEN 'Neve'
+        WHEN m.codice_meteo BETWEEN 80 AND 82 THEN 'Rovesci'
+        WHEN m.codice_meteo >= 95 THEN 'Temporale'
         ELSE 'Altro'
     END AS descrizione,
 
@@ -28,11 +33,13 @@ SELECT
         WHEN m.temperatura < 10 THEN 'Freddo'
         WHEN m.temperatura BETWEEN 10 AND 25 THEN 'Mite'
         ELSE 'Caldo'
-    END as fascia_temperatura,
-
+    END as fascia_temperatura -- Rimosso la virgola qui
 
 FROM {{ ref('ods_meteo') }} as m
-    LEFT JOIN {{ this }} as target ON m.timestamp_completo = target.timestamp_completo
+{% if is_incremental() %}
+    -- Assicurati che l'alias 'target' sia corretto
+    LEFT JOIN {{ this }} target ON m.timestamp_completo = target.timestamp_completo
+{% endif %}
 
 {% if is_incremental() %}
     WHERE m.update_time > (

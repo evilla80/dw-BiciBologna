@@ -1,6 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key=['idOra'],
+    unique_key=['id_ora'],
     alias='dm_ora'
 ) }}
 
@@ -29,17 +29,19 @@ WITH source_data AS (
 
 SELECT
     {% if is_incremental() %}
-        IFNULL(target.idOra, nextval('seq_dm_ora'))
+        IFNULL(target.id_ora, nextval('seq_dm_ora'))
     {% else %}
         nextval('seq_dm_ora')
-    {% endif %} as idOra,
+    {% endif %} as id_ora,
 
     o.ora,
-    o.fascia_oraria,
+    o.fascia_oraria
 
 
 FROM source_data as o
+{% if is_incremental() %}
     LEFT JOIN {{ this }} as target ON o.ora = target.ora
+{% endif %}
 
 {% if is_incremental() %}
     WHERE o.update_time > (

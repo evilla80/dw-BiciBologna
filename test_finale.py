@@ -10,6 +10,12 @@ pd.set_option('display.float_format', '{:.1f}'.format)
 db_path = 'bike_sharing.ddb'
 con = duckdb.connect(db_path)
 
+try:
+    con.execute("USE main_datamart")
+    print("✅ Connesso allo schema main_datamart")
+except:
+    print("⚠️ Impossibile selezionare main_datamart, provo con main...")
+
 def esegui_query(titolo, sql):
     print(f"\n--- {titolo} ---")
     try:
@@ -27,7 +33,7 @@ SELECT
     d.mese,
     SUM(f.totale) as passaggi_totali
 FROM dm_rilevazione f
-JOIN dm_data d ON f.data_idData = d.idData
+JOIN dm_data d ON f.data_idData = d.id_data
 GROUP BY d.mese
 ORDER BY passaggi_totali DESC;
 """
@@ -39,7 +45,7 @@ SELECT
     o.fascia_oraria,
     SUM(f.totale) as passaggi_totali
 FROM dm_rilevazione f
-JOIN dm_ora o ON f.ora_idOra = o.idOra
+JOIN dm_ora o ON f.ora_idOra = o.id_ora
 GROUP BY o.ora, o.fascia_oraria
 ORDER BY passaggi_totali DESC
 LIMIT 5;
@@ -52,7 +58,7 @@ SELECT
     CASE WHEN d.is_weekend = 1 THEN 'Weekend' ELSE 'Feriale' END as tipo_giorno,
     ROUND(AVG(f.totale), 2) as media_passaggi
 FROM dm_rilevazione f
-JOIN dm_data d ON f.data_idData = d.idData
+JOIN dm_data d ON f.data_idData = d.id_data
 GROUP BY d.is_weekend;
 """
 esegui_query("3. Si usa la bici più per lavoro o per svago?", sql_weekend)
@@ -62,10 +68,10 @@ sql_quartieri = """
 SELECT 
     q.nome_quartiere,
     SUM(f.totale) as passaggi_totali,
-    COUNT(DISTINCT c.idColonnina) as num_colonnine_attive
+    COUNT(DISTINCT c.id_colonnina) as num_colonnine_attive
 FROM dm_rilevazione f
-JOIN dm_colonnina c ON f.colonnina_idColonnina = c.idColonnina
-JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.idQuartiere
+JOIN dm_colonnina c ON f.colonnina_id_colonnina = c.id_colonnina
+JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.id_quartiere
 GROUP BY q.nome_quartiere
 ORDER BY passaggi_totali DESC;
 """
@@ -78,8 +84,8 @@ SELECT
     q.nome_quartiere,
     SUM(f.totale) as passaggi_totali
 FROM dm_rilevazione f
-JOIN dm_colonnina c ON f.colonnina_idColonnina = c.idColonnina
-JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.idQuartiere
+JOIN dm_colonnina c ON f.colonnina_idColonnina = c.id_colonnina
+JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.id_quartiere
 GROUP BY c.nome_colonnina, q.nome_quartiere
 ORDER BY passaggi_totali DESC
 LIMIT 5;
@@ -92,7 +98,7 @@ SELECT
     m.fascia_temperatura,
     ROUND(AVG(f.totale), 2) as media_passaggi
 FROM dm_rilevazione f
-JOIN dm_meteo m ON f.meteo_idMeteo = m.idMeteo
+JOIN dm_meteo m ON f.meteo_idMeteo = m.id_meteo
 WHERE m.fascia_temperatura IS NOT NULL
 GROUP BY m.fascia_temperatura
 ORDER BY media_passaggi DESC;
@@ -110,7 +116,7 @@ SELECT
     SUM(f.totale) as totale_passaggi
     
 FROM dm_rilevazione f
-JOIN dm_meteo m ON f.meteo_idMeteo = m.idMeteo
+JOIN dm_meteo m ON f.meteo_idMeteo = m.id_meteo
 GROUP BY condizione_meteo
 ORDER BY media_passaggi DESC;
 """
@@ -126,7 +132,7 @@ SELECT
         ELSE 'Flusso -> Periferia'
     END as tendenza_dominante
 FROM dm_rilevazione f
-JOIN dm_ora o ON f.ora_idOra = o.idOra
+JOIN dm_ora o ON f.ora_idOra = o.id_ora
 WHERE o.ora IN (8, 18) -- Guardiamo solo picco mattina e picco sera
 GROUP BY o.ora
 ORDER BY o.ora;
@@ -144,8 +150,8 @@ SELECT
     -- Calcoliamo la densità: Passaggi diviso km quadrati
     CAST(SUM(f.totale) / (MAX(q.superficie) * 8800) AS INTEGER) as passaggi_per_kmq
 FROM dm_rilevazione f
-JOIN dm_colonnina c ON f.colonnina_idColonnina = c.idColonnina
-JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.idQuartiere
+JOIN dm_colonnina c ON f.colonnina_idColonnina = c.id_colonnina
+JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.id_quartiere
 GROUP BY q.nome_quartiere
 ORDER BY passaggi_per_kmq DESC;
 """
@@ -161,7 +167,7 @@ SELECT
     c.latitudine,
     c.longitudine
 FROM dm_colonnina c
-LEFT JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.idQuartiere
+LEFT JOIN dm_quartiere q ON c.quartiere_idQuartiere = q.id_quartiere
 LIMIT 5;
 """
 print(con.execute(query_geo).df())
@@ -176,9 +182,9 @@ SELECT
     m.temperatura,
     sum(r.totale) as bici_totali
 FROM dm_rilevazione r
-JOIN dm_data d ON r.data_idData = d.idData
-JOIN dm_ora o ON r.ora_idOra = o.idOra
-LEFT JOIN dm_meteo m ON r.meteo_idMeteo = m.idMeteo
+JOIN dm_data d ON r.data_idData = d.id_data
+JOIN dm_ora o ON r.ora_idOra = o.id_ora
+LEFT JOIN dm_meteo m ON r.meteo_idMeteo = m.id_meteo
 GROUP BY 1, 2, 3, 4
 ORDER BY 1 DESC
 LIMIT 5;
@@ -201,8 +207,8 @@ SELECT
     SUM(r.totale) as passaggi_totali_assoluti
 
 FROM dm_rilevazione r
-JOIN dm_data d ON r.data_idData = d.idData
-JOIN dm_ora o ON r.ora_idOra = o.idOra
+JOIN dm_data d ON r.data_idData = d.id_data
+JOIN dm_ora o ON r.ora_idOra = o.id_ora
 GROUP BY d.anno
 ORDER BY d.anno DESC;
 """
@@ -227,10 +233,48 @@ SELECT
     SUM(r.totale) as passaggi_totali,
     ROUND(AVG(r.totale), 1) as media_passaggi_per_riga
 FROM dm_rilevazione r
-JOIN dm_data d ON r.data_idData = d.idData
+JOIN dm_data d ON r.data_idData = d.id_data
 GROUP BY d.anno
 ORDER BY d.anno DESC;
 """
+
+print("--- 1. VERIFICA JOIN SPAZIALE (Colonnine -> Quartieri) ---")
+# Se qui vedi dei nomi di quartieri, la magia spaziale ha funzionato!
+query_geo = """
+SELECT DISTINCT c.nome_colonnina 
+FROM dm_colonnina c;
+"""
+print(con.execute(query_geo).df())
+
+print("--- 1. VERIFICA JOIN SPAZIALE (Colonnine -> Quartieri) ---")
+# Se qui vedi dei nomi di quartieri, la magia spaziale ha funzionato!
+query_geo = """
+SELECT DISTINCT q.nome_quartiere 
+FROM dm_quartiere as q;
+"""
+print(con.execute(query_geo).df())
+
+
+print("--- 1. VERIFICA JOIN SPAZIALE (Colonnine -> Quartieri) ---")
+# Se qui vedi dei nomi di quartieri, la magia spaziale ha funzionato!
+query_geo = """
+SELECT COUNT(*) as totale_righe_effettive 
+FROM dm_rilevazione; -- oppure ods_rilevazione se il dm non è ancora pronto
+"""
+print(con.execute(query_geo).df())
+
+
+count = con.execute("SELECT COUNT(*) FROM dm_rilevazione").fetchone()[0]
+
+# Conta le righe teoriche (per fare il confronto)
+# 5 anni * 365 giorni * 24 ore * 23 colonnine
+teorico = 5 * 365 * 24 * 23
+
+print(f"--- DATI PER LA TESI ---")
+print(f"Righe Reali (Fact Table): {count}")
+print(f"Righe Teoriche (Max):     {teorico}")
+print(f"Copertura Dati:           {round((count/teorico)*100, 2)}%")
+
 
 df_debug = con.execute(query_debug).df()
 print(df_debug.to_string())

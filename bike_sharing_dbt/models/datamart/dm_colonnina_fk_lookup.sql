@@ -11,7 +11,7 @@ SELECT
     c.longitudine,
     c.update_time,
     -- Recuperiamo la chiave surrogata del quartiere
-    MAX(dq.idQuartiere) as quartiere_idQuartiere
+    MAX(dq.id_quartiere) as quartiere_idQuartiere
 
 FROM {{ ref('ods_colonnina') }} c
     -- faccio left join per avere la colonnina anche se non ho il quartiere

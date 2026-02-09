@@ -2,7 +2,7 @@
     Caricamento Dimensione Colonnina con Sequence
 */
 
-{{ config(materialized='incremental', unique_key=['idColonnina'], alias='dm_colonnina') }}
+{{ config(materialized='incremental', unique_key=['id_colonnina'], alias='dm_colonnina') }}
 
 {% set initialize %}
     CREATE SEQUENCE IF NOT EXISTS seq_dm_colonnina;
@@ -10,14 +10,20 @@
 {% do run_query(initialize) %}
 
 SELECT
-    IFNULL(target.idColonnina, nextval('seq_dm_colonnina')) as idColonnina,
+    {% if is_incremental() %}
+        IFNULL(target.id_colonnina, nextval('seq_dm_colonnina'))
+    {% else %}
+        nextval('seq_dm_colonnina')
+    {% endif %} as id_colonnina,
     c.nome_colonnina,
     c.latitudine,
     c.longitudine,
     c.quartiere_idQuartiere
 
 FROM {{ ref('dm_colonnina_fk_lookup') }} as c
+{% if is_incremental() %}
     LEFT JOIN {{ this }} as target ON c.nome_colonnina = target.nome_colonnina
+{% endif %}
 
 {% if is_incremental() %}
     WHERE c.update_time > (

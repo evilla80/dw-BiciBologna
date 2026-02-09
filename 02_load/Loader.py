@@ -10,7 +10,7 @@ data_dir = os.path.join(project_root, '01_extraction')
 db_path = os.path.join(project_root, 'bike_sharing.ddb')
 
 # Verifica che i file esistano prima di provare
-files_to_check = ['colonnine_2020_2025.csv', 'meteo_api.csv', 'quartieri_api.json']
+files_to_check = ['colonnine_2021_2025.csv', 'meteo_api.csv', 'quartieri_api.json']
 for f in files_to_check:
     full_path = os.path.join(data_dir, f)
     if not os.path.exists(full_path):
@@ -21,7 +21,7 @@ con = duckdb.connect(db_path)
 # Installazione e caricamento estensione spaziale
 con.execute("INSTALL spatial; LOAD spatial;")
 
-csv_bici = os.path.join(data_dir, 'colonnine_2020_2025.csv')
+csv_bici = os.path.join(data_dir, 'colonnine_2021_2025.csv')
 con.execute(f"CREATE OR REPLACE TABLE raw_colonnine AS SELECT * FROM read_csv_auto('{csv_bici}', delim='\\t')")
 
 csv_meteo = os.path.join(data_dir, 'meteo_api.csv')

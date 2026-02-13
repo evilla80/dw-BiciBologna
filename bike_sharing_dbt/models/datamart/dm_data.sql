@@ -1,8 +1,4 @@
-{{ config(
-    materialized='incremental',
-    unique_key=['id_data'],
-    alias='dm_data'
-) }}
+{{ config(materialized='incremental', unique_key=['id_data'], alias='dm_data') }}
 
 {% set initialize %}
     CREATE SEQUENCE IF NOT EXISTS seq_dm_data;
@@ -10,7 +6,6 @@
 {% do run_query(initialize) %}
 
 WITH source_data AS (
-    -- Prepariamo i dati unici dalla ODS (Source)
     SELECT
         r.data,
         EXTRACT(YEAR FROM r.data) as anno,
@@ -36,7 +31,6 @@ WITH source_data AS (
             ELSE 0
         END as is_festivo,
 
-        -- Prendiamo l'ultimo aggiornamento disponibile per questa data
         MAX(update_time) as update_time
 
     FROM {{ ref('ods_rilevazione') }} as r
@@ -44,13 +38,11 @@ WITH source_data AS (
 )
 
 SELECT
-    -- Logica Sequence: Se esiste già prendi l'ID vecchio, altrimenti generane uno nuovo
     {% if is_incremental() %}
         IFNULL(target.id_data, nextval('seq_dm_data'))
     {% else %}
         nextval('seq_dm_data')
     {% endif %} as id_data,
-
     d.data,
     d.anno,
     d.mese,
@@ -59,11 +51,13 @@ SELECT
     d.is_festivo
 
 FROM source_data as d
+
 {% if is_incremental() %}
     LEFT JOIN {{ this }} as target ON d.data = target.data
 {% endif %}
-{% if is_incremental() %}
 
+
+{% if is_incremental() %}
     WHERE d.update_time > (
         SELECT COALESCE(MAX(time), '1900-01-01 00:00:00')
         FROM last_execution_times

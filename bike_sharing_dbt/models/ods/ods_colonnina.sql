@@ -1,7 +1,3 @@
-/*
-    Materializzazione anagrafica Colonnine
-*/
-
 {{ config(materialized='incremental', unique_key='nome', alias='colonnina') }}
 
 SELECT *

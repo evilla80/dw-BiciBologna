@@ -1,8 +1,4 @@
-{{ config(
-    materialized='incremental',
-    unique_key=['id_ora'],
-    alias='dm_ora'
-) }}
+{{ config(materialized='incremental', unique_key=['id_ora'], alias='dm_ora') }}
 
 {% set initialize %}
     CREATE SEQUENCE IF NOT EXISTS seq_dm_ora;
@@ -10,7 +6,6 @@
 {% do run_query(initialize) %}
 
 WITH source_data AS (
-    -- Prepariamo i dati unici dalla ODS (Source)
     SELECT
         ora,
         CASE
@@ -19,10 +14,7 @@ WITH source_data AS (
             WHEN ora BETWEEN 12 AND 17 THEN 'Pomeriggio'
             ELSE 'Sera'
         END as fascia_oraria,
-
-        -- Prendiamo l'ultimo aggiornamento disponibile per quest'ora
         MAX(update_time) as update_time
-
     FROM {{ ref('ods_rilevazione') }}
     GROUP BY 1, 2
 )
@@ -33,10 +25,8 @@ SELECT
     {% else %}
         nextval('seq_dm_ora')
     {% endif %} as id_ora,
-
     o.ora,
     o.fascia_oraria
-
 
 FROM source_data as o
 {% if is_incremental() %}

@@ -1,7 +1,3 @@
-/*
-    Caricamento Dimensione Colonnina con Sequence
-*/
-
 {{ config(materialized='incremental', unique_key=['id_colonnina'], alias='dm_colonnina') }}
 
 {% set initialize %}

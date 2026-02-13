@@ -7,17 +7,14 @@
 
 SELECT
     {% if is_incremental() %}
-        -- Usa l'underscore come suggerito dal compilatore
         IFNULL(target.id_meteo, nextval('seq_dm_meteo'))
     {% else %}
         nextval('seq_dm_meteo')
     {% endif %} as id_meteo,
-
     m.timestamp_completo,
     m.temperatura,
     m.temperatura_percepita,
     m.codice_meteo,
-
     CASE
         WHEN m.codice_meteo = 0 THEN 'Cielo Sereno'
         WHEN m.codice_meteo BETWEEN 1 AND 3 THEN 'Nuvoloso'
@@ -28,18 +25,18 @@ SELECT
         WHEN m.codice_meteo >= 95 THEN 'Temporale'
         ELSE 'Altro'
     END AS descrizione,
-
     CASE
         WHEN m.temperatura < 10 THEN 'Freddo'
         WHEN m.temperatura BETWEEN 10 AND 25 THEN 'Mite'
         ELSE 'Caldo'
-    END as fascia_temperatura -- Rimosso la virgola qui
+    END as fascia_temperatura
 
 FROM {{ ref('ods_meteo') }} as m
+
 {% if is_incremental() %}
-    -- Assicurati che l'alias 'target' sia corretto
     LEFT JOIN {{ this }} target ON m.timestamp_completo = target.timestamp_completo
 {% endif %}
+
 
 {% if is_incremental() %}
     WHERE m.update_time > (

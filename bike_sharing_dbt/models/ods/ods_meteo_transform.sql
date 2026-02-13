@@ -1,6 +1,3 @@
-/*
-    Standardizzazione tecnica (nomi e tipi), nessuna logica di business.
-*/
 {{ config(materialized='ephemeral') }}
 
 SELECT
@@ -8,7 +5,6 @@ SELECT
     CAST(temperature_2m AS DECIMAL(10,2)) AS temperatura,
     CAST(apparent_temperature AS DECIMAL(10,2)) AS temperatura_percepita,
     CAST(weather_code AS INTEGER) AS codice_meteo,
-
     current_timestamp AS insert_time,
     current_timestamp AS update_time
 

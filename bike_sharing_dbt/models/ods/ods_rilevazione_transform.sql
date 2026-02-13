@@ -1,7 +1,3 @@
-/*
-    Trasformazione rilevazioni flussi (Senza logica spaziale, solo dati grezzi puliti)
-*/
-
 {{ config(materialized='ephemeral') }}
 
 SELECT

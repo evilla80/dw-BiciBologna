@@ -1,7 +1,3 @@
-/*
-    Materializzazione incrementale dati meteo
-*/
-
 {{ config(materialized='incremental', unique_key='timestamp_completo', alias='meteo') }}
 
 SELECT *

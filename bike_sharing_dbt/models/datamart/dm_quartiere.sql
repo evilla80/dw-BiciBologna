@@ -1,7 +1,3 @@
-/*
-    Caricamento incrementale Dimensione Quartiere con generazione chiave surrogata
-*/
-
 {{ config(materialized='incremental', unique_key=['id_quartiere'], alias='dm_quartiere') }}
 
 {% set initialize %}
@@ -15,11 +11,11 @@ SELECT
     {% else %}
         nextval('seq_dm_quartiere')
     {% endif %} as id_quartiere,
-    q.nome as nome_quartiere,
+    q.nome as nome,
+    q.latitudineCentro,
+    q.longitudineCentro,
     q.superficie,
-    q.geom_perimetro,
-    q.latitudine_centro,
-    q.longitudine_centro
+    q.perimetro
 
 FROM {{ ref('ods_quartiere') }} as q
 {% if is_incremental() %}

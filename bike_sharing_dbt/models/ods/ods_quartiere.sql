@@ -6,12 +6,13 @@
 
 SELECT
     nome,
-    geom_perimetro,
-    latitudine_centro,
-    longitudine_centro,
+    latitudineCentro,
+    longitudineCentro,
     superficie,
+    perimetro,
     insert_time,
     update_time
+
 FROM {{ ref('ods_quartiere_transform') }}
 
 {% if is_incremental() %}

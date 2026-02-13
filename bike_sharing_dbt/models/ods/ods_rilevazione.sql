@@ -1,8 +1,4 @@
-/*
-    Tabella transazionale delle rilevazioni
-*/
-
-{{ config(materialized='incremental', unique_key=['timestamp_completo', 'nome_colonnina'], alias='rilevazione') }}
+{{ config(materialized='incremental', unique_key=['timestamp_completo'], alias='rilevazione') }}
 
 SELECT
     timestamp_completo,

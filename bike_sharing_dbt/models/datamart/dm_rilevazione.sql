@@ -1,12 +1,4 @@
-/*
-    Caricamento Fact Table Rilevazione
-*/
-
-{{ config(
-    materialized='incremental',
-    unique_key=['data_idData', 'ora_idOra', 'colonnina_idColonnina'],
-    alias='dm_rilevazione'
-) }}
+{{ config(materialized='incremental', unique_key=['data_idData', 'ora_idOra', 'colonnina_idColonnina'],alias='dm_rilevazione') }}
 
 SELECT
     r.data_idData,
@@ -15,7 +7,7 @@ SELECT
     r.meteo_idMeteo,
     r.direzioneCentro,
     r.direzionePeriferia,
-    r.totale,
+    r.totale
 
 FROM {{ ref('dm_rilevazione_fk_lookup') }} as r
 

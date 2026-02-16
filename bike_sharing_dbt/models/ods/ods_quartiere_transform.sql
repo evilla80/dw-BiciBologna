@@ -1,7 +1,3 @@
-/*
-    Estrazione dati geografici quartieri
-*/
-
 {{ config(materialized='ephemeral') }}
 
 SELECT

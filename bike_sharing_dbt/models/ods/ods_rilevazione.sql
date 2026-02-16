@@ -13,5 +13,5 @@ SELECT
 FROM {{ ref('ods_rilevazione_transform') }}
 
 {% if is_incremental() %}
-  WHERE update_time > (SELECT IFNULL(MAX(update_time), '0001-01-01 00:00:00') FROM {{ this }})
+  WHERE timestamp_completo > (SELECT IFNULL(MAX(timestamp_completo), '0001-01-01 00:00:00') FROM {{ this }})
 {% endif %}
